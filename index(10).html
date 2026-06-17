@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI & the Financial System — UK Transition Scenario Lab</title>
+<style>
+  :root{
+    --bg:#07111f; --panel:#0d1b2d; --panel2:#10233a; --ink:#eaf2fb; --muted:#9fb2c8;
+    --line:#233a55; --accent:#66d9c8; --accent2:#78a9ff; --warn:#ffce6a; --bad:#ff7c8e;
+    --good:#74e0a7; --shadow:0 18px 50px rgba(0,0,0,.28); --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:radial-gradient(circle at 15% -10%,#17345b 0,transparent 32%),linear-gradient(180deg,#07111f,#091524 55%,#07111f);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45}
+  a{color:#9ed7ff}
+  button,input,select{font:inherit}
+  .shell{max-width:1600px;margin:0 auto;padding:24px}
+  header{display:flex;gap:22px;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+  h1{font-size:clamp(28px,4vw,52px);line-height:1.04;margin:0 0 10px;letter-spacing:-.035em}
+  .subtitle{max-width:980px;color:var(--muted);font-size:16px}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #345371;border-radius:999px;background:#102238;color:#cfe6fa;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+  button{border:1px solid #385675;background:#10243a;color:var(--ink);border-radius:11px;padding:9px 12px;cursor:pointer;transition:.18s ease}
+  button:hover{transform:translateY(-1px);background:#16304b}
+  button.primary{background:linear-gradient(135deg,#4ab7aa,#4387df);border:none;color:#041018;font-weight:800}
+  button.danger{border-color:#6d3340;color:#ffc2ca}
+  .notice{border:1px solid #5c4d29;background:linear-gradient(90deg,rgba(255,206,106,.12),rgba(255,206,106,.04));padding:12px 14px;border-radius:14px;color:#f5dfaa;margin:12px 0 18px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .tab-btn.active{background:#1f4464;border-color:#6aaee8}
+  .tab{display:none}.tab.active{display:block}
+  .layout{display:grid;grid-template-columns:minmax(290px,370px) 1fr;gap:18px;align-items:start}
+  .panel{background:linear-gradient(180deg,rgba(16,35,58,.96),rgba(11,26,44,.96));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .controls{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow:auto;padding:16px}
+  .controls h2,.panel h2{margin:0;font-size:18px}
+  .section{border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+  .section:first-of-type{border-top:0;padding-top:0}
+  .section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .section-title h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#c7d8ea;margin:0}
+  .control{margin:10px 0 13px}
+  .label-row{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;color:#d5e4f2}
+  .value{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:800}
+  input[type="range"]{width:100%;accent-color:#66d9c8}
+  input[type="number"],select{width:100%;background:#081522;border:1px solid #2d4863;border-radius:9px;color:var(--ink);padding:8px 9px;margin-top:5px}
+  .help{font-size:11px;color:#8298af;margin-top:4px}
+  .presets{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .preset{font-size:12px;padding:8px}
+  .preset.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+  .main{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}.layout>*{min-width:0}
+  .kpis{display:grid;grid-template-columns:repeat(8,minmax(125px,1fr));gap:10px}
+  .kpi{padding:14px;background:linear-gradient(180deg,#112944,#0c1e32);border:1px solid #26425f;border-radius:15px;min-height:108px}
+  .kpi .name{font-size:11px;color:#9db2c8;text-transform:uppercase;letter-spacing:.06em}
+  .kpi .big{font-size:25px;font-weight:850;margin:7px 0 2px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .kpi .delta{font-size:11px;color:#9db2c8}
+  .good{color:var(--good)!important}.bad{color:var(--bad)!important}.warn{color:var(--warn)!important}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .card{padding:15px}
+  .card-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:9px}
+  .card-head h3{margin:0;font-size:15px}.card-head p{margin:3px 0 0;color:var(--muted);font-size:12px}
+  canvas{display:block;width:100%;height:280px;background:linear-gradient(180deg,rgba(4,14,25,.28),rgba(4,14,25,.08));border-radius:10px}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#b5c6d7;margin-top:8px}
+  .legend span::before{content:"";display:inline-block;width:10px;height:3px;border-radius:3px;margin-right:5px;vertical-align:middle;background:var(--c)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{padding:9px 8px;border-bottom:1px solid #20374f;text-align:right;font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child{text-align:left}
+  th{color:#9fb4c9;font-weight:700;position:sticky;top:0;background:#10233a}
+  .scroll{overflow:auto;max-height:420px}
+  .phase{padding:11px;border-radius:12px;border:1px solid #31506d;background:#0b1a2c}
+  .phase strong{display:block;margin-bottom:3px}.phase small{color:var(--muted)}
+  .riskbar{height:10px;border-radius:999px;background:#07131f;overflow:hidden;border:1px solid #253f59;margin-top:7px}
+  .riskbar > div{height:100%;background:linear-gradient(90deg,#5bd5ab,#ffd069,#ff7187)}
+  .source-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .source{padding:14px;border:1px solid #29445f;background:#0b1c2f;border-radius:13px}
+  .source .metric{font-weight:800}.source .datum{font-size:21px;margin:4px 0}.source .meta{font-size:11px;color:var(--muted)}
+  .tag{display:inline-block;border-radius:999px;padding:3px 7px;font-size:10px;margin-left:4px;border:1px solid #35536f;color:#c6d8e8}
+  .tag.obs{border-color:#3d775f;color:#a9efc8}.tag.assump{border-color:#745e2f;color:#f5d88d}.tag.experimental{border-color:#67416d;color:#e6b6ef}
+  .equation{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#071522;border:1px solid #27405a;padding:12px;border-radius:10px;color:#cce5f8;overflow:auto;font-size:12px}
+  .small{font-size:12px;color:var(--muted)}
+  .foot{color:#758ba1;font-size:11px;margin-top:20px}
+  .tooltip{position:fixed;pointer-events:none;display:none;background:#05101c;border:1px solid #3d5e7a;color:#eef7ff;padding:7px 9px;border-radius:8px;font-size:11px;z-index:20;box-shadow:var(--shadow)}
+  .comparison td.risk-high{color:#ff9aaa}.comparison td.risk-low{color:#86e4b1}
+  .scenario-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .mini{padding:11px;border:1px solid #27445f;border-radius:12px;background:#0a1a2b}
+  .mini .label{font-size:10px;text-transform:uppercase;color:#8fa6bd;letter-spacing:.06em}.mini .num{font-size:20px;font-weight:800;margin-top:4px}
+  @media(max-width:1250px){.kpis{grid-template-columns:repeat(4,1fr)}}
+  @media(max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}.controls{position:relative;max-height:none}.grid2,.grid3{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.source-grid{grid-template-columns:1fr}header{flex-direction:column}.actions{justify-content:flex-start}}
+  @media(max-width:560px){.shell{padding:12px}.kpis{grid-template-columns:1fr 1fr}.presets{grid-template-columns:1fr}.scenario-summary{grid-template-columns:1fr}}
+  @media print{body{background:white;color:#111}.controls,.tabs,.actions,.notice{display:none!important}.layout{display:block}.panel,.kpi{box-shadow:none;background:white;color:#111;border-color:#ccc}.tab{display:block!important}.tab:not(#dashboard){display:none!important}.main{gap:10px}.kpis{grid-template-columns:repeat(4,1fr)}canvas{border:1px solid #ddd}.small,.card-head p,.kpi .delta{color:#444}.kpi .name{color:#333}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div>
+      <div class="badge">Exploratory systems model · UK baseline</div>
+      <h1>AI & the Financial System<br/>Transition Scenario Lab</h1>
+      <div class="subtitle">Explore compressed AI transitions in which autonomous agents, changing firm boundaries and machine-speed finance may produce either rapid diffusion or a genuine macroeconomic phase change. The model can move far outside current productivity, labour-share and financial-stability norms while keeping observed starting conditions separate from assumptions.</div>
+    </div>
+    <div class="actions">
+      <button id="saveBtn">Save locally</button>
+      <button id="exportBtn">Export scenario</button>
+      <button id="csvBtn">Export paths CSV</button>
+      <button onclick="window.print()">Print / PDF</button>
+      <button id="resetBtn" class="danger">Reset</button>
+    </div>
+  </header>
+
+  <div class="notice"><strong>Not a forecast.</strong> This is a transparent scenario generator for research and stress-testing. The extreme presets deliberately permit structural breaks outside the historical UK range: double-digit productivity growth, rapid labour-income decoupling and machine-speed balance-sheet adjustment. Outputs are conditional paths under stated assumptions, not point estimates.</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Scenario dashboard</button>
+    <button class="tab-btn" data-tab="compare">Compare presets</button>
+    <button class="tab-btn" data-tab="starting">Starting conditions</button>
+    <button class="tab-btn" data-tab="methods">Model & equations</button>
+  </div>
+
+  <section class="tab active" id="dashboard">
+    <div class="layout">
+      <aside class="panel controls">
+        <div class="section-title"><h2>Scenario controls</h2><span id="scenarioName" class="tag">Managed diffusion</span></div>
+        <div class="section">
+          <div class="section-title"><h3>Preset scenarios</h3></div>
+          <div class="presets" id="presetButtons"></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><h3>Horizon & baseline</h3></div>
+          <div class="control"><div class="label-row"><label for="horizon">End year</label><span class="value" id="horizonOut"></span></div><input id="horizon" type="range" min="2029" max="2040" step="1"><div class="help">The presets are designed around a compressed 3–10 year transition window.</div></div>
+          <div class="control"><div class="label-row"><label for="baseGrowth">Non-AI real growth trend</label><span class="value" id="baseGrowthOut"></span></div><input id="baseGrowth" type="range" min="0" max="2.5" step="0.1"></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><h3>Capability & diffusion</h3></div>
+          <div class="control"><div class="label-row"><label for="adoptionSpeed">Economy-wide adoption speed</label><span class="value" id="adoptionSpeedOut"></span></div><input id="adoptionSpeed" type="range" min="0.08" max="1.5" step="0.01"><div class="help">Base logistic diffusion rate from the observed 26% business-adoption starting point.</div></div>
+          <div class="control"><div class="label-row"><label for="transitionCompression">Transition compression</label><span class="value" id="transitionCompressionOut"></span></div><input id="transitionCompression" type="range" min="0.5" max="3.5" step="0.1"><div class="help">Multiplies the speed of adoption, autonomy, financial-agent diffusion and capability propagation.</div></div>
+          <div class="control"><div class="label-row"><label for="phaseThreshold">Structural-break threshold</label><span class="value" id="phaseThresholdOut"></span></div><input id="phaseThreshold" type="range" min="30" max="80" step="1"><div class="help">Lower values trigger the nonlinear regime with less combined capability, autonomy and institutional readiness.</div></div>
+          <div class="control"><div class="label-row"><label for="phaseStrength">Phase-change amplification</label><span class="value" id="phaseStrengthOut"></span></div><input id="phaseStrength" type="range" min="0" max="100" step="1"><div class="help">Controls how strongly outcomes depart from incremental historical relationships after the threshold is crossed.</div></div>
+          <div class="control"><div class="label-row"><label for="adoptionCeiling">Long-run business adoption</label><span class="value" id="adoptionCeilingOut"></span></div><input id="adoptionCeiling" type="range" min="50" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="autonomyTarget">Autonomous decision share</label><span class="value" id="autonomyTargetOut"></span></div><input id="autonomyTarget" type="range" min="5" max="95" step="1"></div>
+          <div class="control"><div class="label-row"><label for="capabilityJump">Frontier capability jump</label><span class="value" id="capabilityJumpOut"></span></div><input id="capabilityJump" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><label>Capability jump year<input id="capabilityYear" type="number" min="2026" max="2040" step="1"></label></div>
+          <div class="control"><div class="label-row"><label for="maxProductivity">Peak annual productivity uplift</label><span class="value" id="maxProductivityOut"></span></div><input id="maxProductivity" type="range" min="0" max="30" step="0.5"><div class="help">Extreme presets permit a short-lived industrial-revolution-scale acceleration rather than small deviations around trend.</div></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><h3>Labour, income & firm boundaries</h3></div>
+          <div class="control"><div class="label-row"><label for="taskExposure">Share of tasks technically exposed</label><span class="value" id="taskExposureOut"></span></div><input id="taskExposure" type="range" min="10" max="90" step="1"></div>
+          <div class="control"><div class="label-row"><label for="substitution">Substitution intensity</label><span class="value" id="substitutionOut"></span></div><input id="substitution" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="reallocation">Worker reallocation speed</label><span class="value" id="reallocationOut"></span></div><input id="reallocation" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="rentCapture">AI rents captured by capital</label><span class="value" id="rentCaptureOut"></span></div><input id="rentCapture" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="redistribution">Fiscal / ownership redistribution</label><span class="value" id="redistributionOut"></span></div><input id="redistribution" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="contractEfficiency">Machine contracting efficiency</label><span class="value" id="contractEfficiencyOut"></span></div><input id="contractEfficiency" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="legalRecognition">Legal recognition of agent commitments</label><span class="value" id="legalRecognitionOut"></span></div><input id="legalRecognition" type="range" min="0" max="100" step="1"></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><h3>Agentic finance</h3></div>
+          <div class="control"><div class="label-row"><label for="financialAgentTarget">Household / firm agent-managed money</label><span class="value" id="financialAgentTargetOut"></span></div><input id="financialAgentTarget" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="depositSwitching">Deposit switching intensity</label><span class="value" id="depositSwitchingOut"></span></div><input id="depositSwitching" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="marketAutomation">Autonomous market participation target</label><span class="value" id="marketAutomationOut"></span></div><input id="marketAutomation" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="modelConcentration">Common-model concentration</label><span class="value" id="modelConcentrationOut"></span></div><input id="modelConcentration" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="logicalCoordination">Logical / policy-correlation intensity</label><span class="value" id="logicalCoordinationOut"></span></div><input id="logicalCoordination" type="range" min="0" max="100" step="1"><div class="help">Experimental proxy for coordination through similar or mutually predictable decision policies, including speculative non-causal mechanisms.</div></div>
+        </div>
+        <div class="section">
+          <div class="section-title"><h3>Shock & policy response</h3></div>
+          <div class="control"><label>Confidence shock year<input id="shockYear" type="number" min="2026" max="2040" step="1"></label></div>
+          <div class="control"><div class="label-row"><label for="shockSize">Confidence / information shock</label><span class="value" id="shockSizeOut"></span></div><input id="shockSize" type="range" min="0" max="50" step="1"></div>
+          <div class="control"><div class="label-row"><label for="regulatorySpeed">Regulatory response speed</label><span class="value" id="regulatorySpeedOut"></span></div><input id="regulatorySpeed" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="liquidityResponse">Liquidity backstop strength</label><span class="value" id="liquidityResponseOut"></span></div><input id="liquidityResponse" type="range" min="0" max="100" step="1"></div>
+          <div class="control"><div class="label-row"><label for="capitalResponse">Capital rebuilding / loss absorption</label><span class="value" id="capitalResponseOut"></span></div><input id="capitalResponse" type="range" min="0" max="100" step="1"></div>
+        </div>
+        <div class="section">
+          <button class="primary" id="uncertaintyBtn" style="width:100%">Run 300-draw uncertainty analysis</button>
+          <div class="help" id="uncertaintyStatus">Varies key elasticities around the selected scenario; deterministic seed for reproducibility.</div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="kpis" id="kpis"></div>
+
+        <div class="grid2">
+          <div class="panel card">
+            <div class="card-head"><div><h3>Real output transition</h3><p>GDP index, with non-AI trend comparator and optional uncertainty band.</p></div></div>
+            <canvas id="gdpChart"></canvas>
+            <div class="legend"><span style="--c:#66d9c8">Scenario</span><span style="--c:#7a91aa">Non-AI baseline</span><span style="--c:#456f9d">10–90% uncertainty</span></div>
+          </div>
+          <div class="panel card">
+            <div class="card-head"><div><h3>Labour & distribution</h3><p>Employment rate, labour share and displaced-worker stock.</p></div></div>
+            <canvas id="labourChart"></canvas>
+            <div class="legend"><span style="--c:#78a9ff">Employment rate</span><span style="--c:#ffce6a">Labour share</span><span style="--c:#ff7c8e">Displaced stock</span></div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="panel card">
+            <div class="card-head"><div><h3>Bank resilience</h3><p>Major-bank CET1 and LCR under earnings, credit and funding pressure.</p></div></div>
+            <canvas id="bankChart"></canvas>
+            <div class="legend"><span style="--c:#74e0a7">CET1 ratio</span><span style="--c:#78a9ff">LCR / 10</span><span style="--c:#ff7c8e">Credit losses</span></div>
+          </div>
+          <div class="panel card">
+            <div class="card-head"><div><h3>Agentic transition & systemic risk</h3><p>AI diffusion, financial-agent penetration, network production and composite risk.</p></div></div>
+            <canvas id="riskChart"></canvas>
+            <div class="legend"><span style="--c:#66d9c8">Business AI adoption</span><span style="--c:#78a9ff">Agent-managed money</span><span style="--c:#c894ef">Network production</span><span style="--c:#ffffff">Phase index</span><span style="--c:#ff7c8e">Systemic risk</span></div>
+          </div>
+        </div>
+
+        <div class="grid3">
+          <div class="panel card">
+            <div class="card-head"><div><h3>Transition diagnosis</h3><p id="diagnosisText"></p></div></div>
+            <div class="scenario-summary" id="diagnosisGrid"></div>
+          </div>
+          <div class="panel card">
+            <div class="card-head"><div><h3>Tipping-point monitor</h3><p>Illustrative thresholds, not regulatory limits.</p></div></div>
+            <div id="tipping"></div>
+          </div>
+          <div class="panel card">
+            <div class="card-head"><div><h3>Uncertainty at horizon</h3><p>10th / 50th / 90th percentile from the last simulation.</p></div></div>
+            <div id="uncertaintyBox" class="small">Run the uncertainty analysis to populate this panel.</div>
+          </div>
+        </div>
+
+        <div class="panel card">
+          <div class="card-head"><div><h3>Annual path</h3><p>All model outputs for audit, export and sensitivity review.</p></div></div>
+          <div class="scroll"><table id="pathTable"></table></div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section class="tab" id="compare">
+    <div class="panel card">
+      <div class="card-head"><div><h2>Preset scenario comparison</h2><p>Each row is generated from the same observed UK starting point. Select a row to load its assumptions.</p></div></div>
+      <div class="scroll"><table class="comparison" id="compareTable"></table></div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="panel card"><div class="card-head"><div><h3>GDP at horizon</h3><p>Index relative to 2026 = 100.</p></div></div><canvas id="compareGDP"></canvas></div>
+      <div class="panel card"><div class="card-head"><div><h3>Systemic risk at horizon</h3><p>Composite 0–100 scenario indicator.</p></div></div><canvas id="compareRisk"></canvas></div>
+    </div>
+  </section>
+
+  <section class="tab" id="starting">
+    <div class="panel card">
+      <div class="card-head"><div><h2>Observed and assumed starting conditions</h2><p>Observed data are dated and linked. Assumptions can be edited and saved locally.</p></div></div>
+      <div class="source-grid" id="sourceGrid"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="methods">
+    <div class="grid2">
+      <div class="panel card">
+        <h2>Model architecture</h2>
+        <p class="small">The model runs annually from 2026 over a deliberately compressed horizon. AI adoption begins logistically, but a structural-regime index can activate when capability, autonomy, task substitution, machine contracting and legal recognition jointly cross a threshold. The phase regime changes elasticities rather than merely increasing the same linear effects: productivity can jump into double digits, labour income can decouple sharply from output, organisational networks can replace firm-based production, and funding can migrate at machine speed.</p>
+        <h3>Core state transitions</h3>
+        <div class="equation">AI adoption(t) = logistic(start, ceiling, adoption speed × transition compression)
+Structural signal = f(adoption, autonomy, effective automation, contracting, legal recognition, capability)
+Phase index = phase strength × sigmoid[(structural signal − threshold) / transition width]
+Productivity uplift = peak uplift × [incremental diffusion + nonlinear phase activation]
+Displaced stock(t) = prior stock + automation displacement + phase-break displacement − reallocation
+Labour share = start − automation rents − phase-regime rents − network rents + redistribution
+GDP growth = non-AI trend + productivity uplift − demand drag − financial drag − transition friction
+Deposit flight = routine switching + shock × agent-managed share × switching × model correlation
+CET1(t) = prior CET1 + retained earnings − credit/funding losses + policy response
+Systemic risk = weighted phase-transition + funding + credit + market-correlation + governance risks</div>
+        <p class="small">Every coefficient is a modelling choice, not an estimated structural parameter. The controls expose the most consequential assumptions; further constants are documented in the JavaScript source.</p>
+      </div>
+      <div class="panel card">
+        <h2>How to use the lab</h2>
+        <ol class="small">
+          <li>Choose a preset that represents a coherent narrative.</li>
+          <li>Change one cluster of assumptions at a time: capability, labour, finance or policy.</li>
+          <li>Use the structural-break threshold and phase-strength controls to distinguish incremental diffusion from a genuine regime change.</li>
+          <li>Look for threshold crossings and the speed of the transition rather than precise endpoint values.</li>
+          <li>Run uncertainty analysis to see whether a conclusion survives modest parameter variation.</li>
+          <li>Export paths and compare them with institution-level stress tests or macro models.</li>
+        </ol>
+        <h3>Interpretive cautions</h3>
+        <ul class="small">
+          <li>The model does not price assets, solve a general equilibrium or model strategic agents explicitly.</li>
+          <li>“Logical coordination” is an experimental proxy. It does not assert that acausal trade is feasible.</li>
+          <li>Banking outputs are aggregate stylisations based on major-bank resilience ratios, not forecasts for individual firms.</li>
+          <li>Public data have different reference periods; each source card states its date.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">Built as a self-contained HTML file. No data are sent anywhere. Local saving uses the browser’s localStorage.</div>
+</div>
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+'use strict';
+const STORAGE_KEY='ai_financial_transition_lab_v2_phase_change';
+const START_YEAR=2026;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const fmt=(x,d=1)=>Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct=(x,d=1)=>fmt(x,d)+'%';
+
+const observed = {
+  nominalGDP: {value:3036.899, unit:'£tn', date:'Calendar 2025', type:'Observed / derived', source:'ONS GDP current-price quarterly series; sum of 2025 Q1–Q4', url:'https://www.ons.gov.uk/economy/grossdomesticproductgdp/timeseries/ybha/pn2', note:'747,244 + 756,400 + 763,915 + 769,340 = £3,036.899bn.'},
+  realGDPGrowth: {value:1.4, unit:'%', date:'Calendar 2025', type:'Observed', source:'ONS GDP first quarterly estimate, January–March 2026', url:'https://www.ons.gov.uk/economy/grossdomesticproductgdp/bulletins/gdpfirstquarterlyestimateuk/januarytomarch2026', note:'Annual real GDP growth in 2025.'},
+  employmentRate: {value:75.0, unit:'%', date:'Oct–Dec 2025', type:'Observed', source:'ONS Labour market overview, February 2026', url:'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/employmentandemployeetypes/bulletins/uklabourmarket/february2026', note:'LFS employment rate, ages 16–64.'},
+  labourShare: {value:58.9, unit:'%', date:'Calendar 2025', type:'Observed', source:'ONS labour share of income, whole economy', url:'https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/labourproductivity/timeseries/fzln/ucst', note:'Whole-economy seasonally adjusted labour share.'},
+  householdDTI: {value:126, unit:'%', date:'2024 Q4', type:'Observed', source:'Bank of England Financial Stability Report, July 2025', url:'https://www.bankofengland.co.uk/financial-stability-report/2025/july-2025', note:'Aggregate household gross debt to income.'},
+  mortgageArrears: {value:1.0, unit:'%', date:'2025 Q1', type:'Observed', source:'Bank of England Financial Stability Report, July 2025', url:'https://www.bankofengland.co.uk/financial-stability-report/2025/july-2025', note:'Aggregate mortgage arrears rate.'},
+  cet1: {value:14.5, unit:'%', date:'2025 Q1 / reported Oct 2025', type:'Observed', source:'Bank of England Financial Policy Committee Record, October 2025', url:'https://www.bankofengland.co.uk/financial-policy-committee-record/2025/october-2025', note:'Aggregate major UK bank CET1 ratio.'},
+  leverage: {value:5.1, unit:'%', date:'2025 Q1 / reported Oct 2025', type:'Observed', source:'Bank of England Financial Policy Committee Record, October 2025', url:'https://www.bankofengland.co.uk/financial-policy-committee-record/2025/october-2025', note:'Aggregate major UK bank Tier 1 leverage ratio.'},
+  lcr: {value:151, unit:'%', date:'2025 Q1 / reported Oct 2025', type:'Observed', source:'Bank of England Financial Policy Committee Record, October 2025', url:'https://www.bankofengland.co.uk/financial-policy-committee-record/2025/october-2025', note:'Aggregate major UK bank liquidity coverage ratio.'},
+  businessAI: {value:26, unit:'%', date:'March 2026', type:'Observed — statistics in development', source:'ONS Business Insights and Conditions Survey', url:'https://www.ons.gov.uk/businessindustryandtrade/business/businessservices/bulletins/businessinsightsandimpactontheukeconomy/2april2026', note:'Businesses reporting use of at least one AI technology.'},
+  financeAI: {value:75, unit:'%', date:'2024 survey', type:'Observed survey', source:'Bank of England / FCA AI in UK financial services', url:'https://www.bankofengland.co.uk/report/2024/artificial-intelligence-in-uk-financial-services-2024', note:'Respondent financial firms already using AI.'},
+  autonomousAI: {value:2, unit:'%', date:'2024 survey', type:'Observed survey', source:'Bank of England / FCA AI in UK financial services', url:'https://www.bankofengland.co.uk/report/2024/artificial-intelligence-in-uk-financial-services-2024', note:'Share of reported AI applications with fully autonomous decision-making.'},
+  thirdPartyAI: {value:33, unit:'%', date:'2024 survey', type:'Observed survey', source:'Bank of England / FCA AI in UK financial services', url:'https://www.bankofengland.co.uk/report/2024/artificial-intelligence-in-uk-financial-services-2024', note:'Share of current AI use cases implemented by third parties.'},
+  initialAgentMoney: {value:0.5, unit:'%', date:'2026 calibration', type:'Model assumption', source:'No consistent public measure', url:'', note:'Share of household and firm liquid money actively managed by autonomous agents.'},
+  initialNetworkProduction: {value:3, unit:'%', date:'2026 calibration', type:'Model assumption', source:'No consistent public measure', url:'', note:'Share of value added produced through rapidly reconfigurable agent/vendor networks.'},
+  baseCreditLoss: {value:0.6, unit:'% of loans', date:'2026 calibration', type:'Model assumption', source:'Stylised through-the-cycle starting point', url:'', note:'Used only as a modelling anchor; edit in source code for institution-specific work.'}
+};
+
+const defaults={
+  horizon:2035, baseGrowth:1.2, adoptionSpeed:.34, transitionCompression:1.0, phaseThreshold:60, phaseStrength:25,
+  adoptionCeiling:92, autonomyTarget:55, capabilityJump:25, capabilityYear:2029,
+  maxProductivity:3.5, taskExposure:55, substitution:42, reallocation:62, rentCapture:48, redistribution:52,
+  contractEfficiency:55, legalRecognition:45, financialAgentTarget:55, depositSwitching:40, marketAutomation:65,
+  modelConcentration:45, logicalCoordination:8, shockYear:2031, shockSize:8, regulatorySpeed:65,
+  liquidityResponse:75, capitalResponse:70
+};
+
+const presets={
+  managed:{name:'Managed diffusion',desc:'Fast but still recognisably incremental diffusion; institutions adapt before a full structural break.',params:{...defaults,horizon:2035,transitionCompression:.9,phaseThreshold:66,phaseStrength:22,maxProductivity:3.5,capabilityYear:2029,shockYear:2031}},
+  boom:{name:'Productivity phase change',desc:'A capability breakthrough, rapid complementarity and broad ownership produce sustained double-digit productivity gains without a collapse in labour income.',params:{...defaults,horizon:2034,adoptionSpeed:.72,transitionCompression:1.9,phaseThreshold:52,phaseStrength:82,adoptionCeiling:99,autonomyTarget:86,capabilityJump:88,capabilityYear:2028,maxProductivity:15,taskExposure:65,substitution:10,reallocation:100,rentCapture:34,redistribution:76,contractEfficiency:88,legalRecognition:78,financialAgentTarget:78,depositSwitching:55,marketAutomation:90,modelConcentration:32,logicalCoordination:8,shockYear:2030,shockSize:5,regulatorySpeed:82,liquidityResponse:88,capitalResponse:82}},
+  labour:{name:'Labour-income phase break',desc:'Automation crosses a threshold before ownership, redistribution or worker reallocation adjust; output accelerates while labour income and household credit deteriorate.',params:{...defaults,horizon:2033,adoptionSpeed:.82,transitionCompression:2.2,phaseThreshold:48,phaseStrength:96,adoptionCeiling:99,autonomyTarget:94,capabilityJump:92,capabilityYear:2028,maxProductivity:13,taskExposure:90,substitution:94,reallocation:16,rentCapture:94,redistribution:10,contractEfficiency:86,legalRecognition:65,financialAgentTarget:76,depositSwitching:66,marketAutomation:94,modelConcentration:72,logicalCoordination:18,shockYear:2029,shockSize:16,regulatorySpeed:36,liquidityResponse:58,capitalResponse:48}},
+  run:{name:'Machine-speed bank run',desc:'Agent-managed liquidity becomes dominant before prudential architecture adapts; a correlated signal produces discontinuous deposit migration.',params:{...defaults,horizon:2032,adoptionSpeed:.68,transitionCompression:1.9,phaseThreshold:55,phaseStrength:68,adoptionCeiling:98,autonomyTarget:90,capabilityJump:72,capabilityYear:2028,maxProductivity:8,taskExposure:70,substitution:62,reallocation:54,rentCapture:60,redistribution:42,contractEfficiency:86,legalRecognition:74,financialAgentTarget:96,depositSwitching:98,marketAutomation:96,modelConcentration:92,logicalCoordination:38,shockYear:2029,shockSize:50,regulatorySpeed:28,liquidityResponse:38,capitalResponse:50}},
+  dissolve:{name:'Economics 2.0 / firm dissolution',desc:'Machine contracting, verifiable commitments and autonomous production networks trigger a rapid move beyond the conventional firm and historical productivity regime.',params:{...defaults,horizon:2032,adoptionSpeed:.92,transitionCompression:2.7,phaseThreshold:43,phaseStrength:100,adoptionCeiling:100,autonomyTarget:98,capabilityJump:100,capabilityYear:2028,maxProductivity:24,taskExposure:94,substitution:82,reallocation:56,rentCapture:74,redistribution:40,contractEfficiency:100,legalRecognition:98,financialAgentTarget:96,depositSwitching:84,marketAutomation:100,modelConcentration:60,logicalCoordination:72,shockYear:2030,shockSize:22,regulatorySpeed:30,liquidityResponse:62,capitalResponse:56}},
+  oligopoly:{name:'Concentrated AI oligopoly',desc:'A small set of model and compute owners captures a phase-change productivity boom; labour share, competition and financial resilience weaken sharply.',params:{...defaults,horizon:2033,adoptionSpeed:.74,transitionCompression:2.0,phaseThreshold:50,phaseStrength:92,adoptionCeiling:99,autonomyTarget:92,capabilityJump:92,capabilityYear:2028,maxProductivity:18,taskExposure:84,substitution:82,reallocation:34,rentCapture:99,redistribution:7,contractEfficiency:82,legalRecognition:68,financialAgentTarget:88,depositSwitching:78,marketAutomation:98,modelConcentration:100,logicalCoordination:52,shockYear:2030,shockSize:28,regulatorySpeed:25,liquidityResponse:50,capitalResponse:44}}
+};
+
+let state={...defaults};
+let currentPreset='managed';
+let uncertainty=null;
+
+const ids=Object.keys(defaults);
+function loadState(){
+  try{const s=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(s&&s.params){state={...defaults,...s.params}; currentPreset=s.preset||'custom';}}
+  catch(e){}
+}
+function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify({params:state,preset:currentPreset})); flash('Saved in this browser.');}
+function flash(msg){const el=document.getElementById('uncertaintyStatus');const old=el.textContent;el.textContent=msg;setTimeout(()=>el.textContent=old,1800)}
+
+function logistic(start, ceiling, speed, t){return ceiling/(1+((ceiling/start)-1)*Math.exp(-speed*t));}
+function sigmoid(x){return 1/(1+Math.exp(-x));}
+function capabilityFactor(year,p){
+  const jump=(p.capabilityJump/100)*1.55;
+  const width=Math.max(.28,1.35/p.transitionCompression);
+  return 1+jump*sigmoid((year-p.capabilityYear)/width);
+}
+
+function simulate(p){
+  const years=[]; const n=Math.max(0,p.horizon-START_YEAR);
+  let gdp=100, baseGDP=100, displaced=0, hhDTI=observed.householdDTI.value, cet1=observed.cet1.value;
+  let prevAuto=0, prevNetwork=observed.initialNetworkProduction.value, prevPhase=0;
+  const tempo=p.adoptionSpeed*p.transitionCompression;
+  for(let i=0;i<=n;i++){
+    const year=START_YEAR+i;
+    const adoption=logistic(observed.businessAI.value,p.adoptionCeiling,tempo,i);
+    const cap=capabilityFactor(year,p);
+    const autonomyRaw=observed.autonomousAI.value+(p.autonomyTarget-observed.autonomousAI.value)*(1-Math.exp(-Math.max(0,i-.35)*tempo*.92));
+    const autonomy=clamp(autonomyRaw*(.48+.52*adoption/p.adoptionCeiling),observed.autonomousAI.value,100);
+    const diffusion=clamp((adoption-observed.businessAI.value)/(p.adoptionCeiling-observed.businessAI.value||1),0,1);
+    const taskSub=(p.taskExposure/100)*(p.substitution/100);
+    const autoPotential=clamp((adoption/100)*(autonomy/100)*taskSub*cap*(.82+.30*diffusion),0,.985);
+    const networkEnabler=(adoption/100)*(autonomy/100)*(.25+.75*p.contractEfficiency/100)*(.18+.82*p.legalRecognition/100);
+    const capabilityNorm=clamp((cap-1)/1.55,0,1);
+    const structuralSignal=100*(.23*diffusion+.24*(autonomy/100)+.22*autoPotential+.16*networkEnabler+.15*capabilityNorm);
+    const transitionWidth=Math.max(2.5,8/Math.sqrt(p.transitionCompression));
+    const phaseIndex=clamp((p.phaseStrength/100)*sigmoid((structuralSignal-p.phaseThreshold)/transitionWidth),0,1);
+    const phaseDelta=Math.max(0,phaseIndex-prevPhase);
+
+    const deltaAuto=Math.max(0,autoPotential-prevAuto);
+    const automationDisplacement=deltaAuto*100*(.70+.90*phaseIndex);
+    const phaseDisplacement=phaseDelta*p.taskExposure*(p.substitution/100)*.38;
+    const newDisplacement=automationDisplacement+phaseDisplacement;
+
+    const productivityActivation=clamp(.28*Math.pow(diffusion,.86)+.72*Math.pow(phaseIndex,1.12),0,1);
+    const institutionalMultiplier=.62+.22*p.contractEfficiency/100+.16*p.legalRecognition/100;
+    const extraProd=p.maxProductivity*productivityActivation*institutionalMultiplier;
+
+    const reabsorbRate=.025+.31*p.reallocation/100;
+    const complementarityJobs=Math.max(0,extraProd-3)*(.025+.10*p.reallocation/100)*(1-p.substitution/100);
+    const reabsorbed=displaced*reabsorbRate+complementarityJobs;
+    displaced=clamp(displaced+newDisplacement-reabsorbed,0,100);
+    const employmentBoost=Math.max(0,extraProd-4)*(1-p.substitution/100)*(p.reallocation/100)*.14;
+    const employment=clamp(observed.employmentRate.value-displaced*.48+employmentBoost,35,83);
+
+    const network=clamp(observed.initialNetworkProduction.value+94*networkEnabler*(.38+.62*phaseIndex),0,98);
+    const networkChange=Math.max(0,network-prevNetwork);
+    const rent=p.rentCapture/100, redist=p.redistribution/100, subst=p.substitution/100;
+    const automationRent=15*autoPotential*rent;
+    const phaseRent=38*phaseIndex*rent*(.35+.65*subst);
+    const networkRent=8*(network/100)*rent;
+    const redistributionOffset=10*autoPotential*redist+20*phaseIndex*redist;
+    const labourShare=clamp(observed.labourShare.value-automationRent-phaseRent-networkRent+redistributionOffset,15,70);
+
+    const labourGap=Math.max(0,observed.labourShare.value-labourShare);
+    const demandDrag=displaced*(1-redist)*.13+labourGap*.045+phaseIndex*Math.max(0,52-labourShare)*.10;
+    const agentDiffusion=1-Math.exp(-i*tempo*.72);
+    const agentMoney=clamp(observed.initialAgentMoney.value+(p.financialAgentTarget-observed.initialAgentMoney.value)*agentDiffusion*(.55+.45*autonomy/Math.max(1,p.autonomyTarget))*(.72+.28*phaseIndex),0,100);
+    const marketAI=clamp(8+(p.marketAutomation-8)*(1-Math.exp(-i*tempo*.80))*(.55+.45*autonomy/Math.max(1,p.autonomyTarget))*(.74+.26*phaseIndex),0,100);
+    const shockWidth=Math.max(.42,.95/p.transitionCompression);
+    const shockPulse=p.shockSize*Math.exp(-Math.pow((year-p.shockYear)/shockWidth,2));
+    const routineFlight=.35+.06*agentMoney*(p.depositSwitching/100)*(1+.80*p.modelConcentration/100)*(.70+.30*phaseIndex);
+    const shockFlight=shockPulse*(agentMoney/100)*(p.depositSwitching/100)*(.45+.55*p.modelConcentration/100)*(1+.35*phaseIndex);
+    const depositFlight=clamp(routineFlight+shockFlight,0,80);
+    const coordinationRisk=clamp((marketAI/100)*(p.modelConcentration/100)*(.35+.65*p.logicalCoordination/100)*(55+45*phaseIndex),0,100);
+    const financeDrag=Math.max(0,depositFlight-4)*.065+Math.max(0,coordinationRisk-30)*.020;
+    const transitionFriction=newDisplacement*.11+networkChange*.045+phaseDelta*10;
+    const gdpGrowth=clamp(p.baseGrowth+extraProd-demandDrag-financeDrag-transitionFriction,-25,40);
+    if(i>0){gdp*=1+gdpGrowth/100;baseGDP*=1+p.baseGrowth/100;}
+
+    hhDTI=clamp(hhDTI+Math.max(0,observed.employmentRate.value-employment)*.58+labourGap*.10-Math.max(0,gdpGrowth-3)*.22-redist*.30,60,350);
+    const creditLoss=clamp(observed.baseCreditLoss.value+displaced*.17+Math.max(0,1-gdpGrowth)*.28+Math.max(0,hhDTI-126)*.016+networkChange*.04+shockPulse*.025+phaseDelta*2.5,.2,15);
+    const nimPressure=clamp(agentMoney*.55+network*.22+phaseIndex*12,0,100);
+    if(i>0){
+      const retained=.44*(1-nimPressure/125)-creditLoss*.22-depositFlight*.024;
+      const policy=.14*(p.capitalResponse/100)*Math.max(0,14.5-cet1);
+      cet1=clamp(cet1+retained+policy,0,22);
+    }
+    const lcrTarget=observed.lcr.value-depositFlight*1.95+32*(p.liquidityResponse/100)*diffusion-14*(network/100)*(1-p.regulatorySpeed/100)-12*phaseDelta*(1-p.liquidityResponse/100);
+    const lcr=clamp(lcrTarget,20,240);
+    const governanceGap=(100-p.regulatorySpeed)/100;
+    const systemic=clamp(
+      7+20*phaseIndex+16*autoPotential+15*(agentMoney/100)*(p.depositSwitching/100)+15*(coordinationRisk/100)+
+      13*(network/100)*governanceGap+14*clamp(displaced/20,0,1)+12*clamp((12-cet1)/6,0,1)+
+      10*clamp((120-lcr)/70,0,1)+9*(p.logicalCoordination/100)*(marketAI/100)+shockPulse*.48-
+      7*(p.regulatorySpeed/100)-4*(p.liquidityResponse/100),0,100);
+    const phase=phaseIndex<.10?(adoption<45?'Experimentation':'Diffusion'):phaseIndex<.40?'Acceleration':phaseIndex<.75?'Structural break':'Post-transition regime';
+    years.push({year,adoption,autonomy,cap,structuralSignal,phaseIndex:phaseIndex*100,autoPotential:autoPotential*100,extraProd,newDisplacement,displaced,employment,network,labourShare,agentMoney,marketAI,depositFlight,coordinationRisk,gdpGrowth,gdp,baseGDP,hhDTI,creditLoss,nimPressure,cet1,lcr,systemic,phase});
+    prevAuto=autoPotential;prevNetwork=network;prevPhase=phaseIndex;
+  }
+  return years;
+}
+
+function diagnose(rows,p=state){
+  const e=rows.at(-1), peak=rows.reduce((a,b)=>b.systemic>a.systemic?b:a,rows[0]);
+  const gdpUplift=(e.gdp/e.baseGDP-1)*100;
+  let text='A relatively balanced transition.';
+  if(e.employment<69) text='The central vulnerability is a labour-income and household-balance-sheet shock.';
+  else if(peak.depositFlight>12 || e.lcr<110) text='The central vulnerability is machine-speed funding mobility and liquidity stress.';
+  else if(e.network>50 && p.regulatorySpeed<50) text='Production reorganises faster than legal and prudential perimeters can adapt.';
+  else if(e.systemic>55) text='Productivity gains coexist with high endogenous financial-system fragility.';
+  else if(gdpUplift>50) text='A high-productivity transition dominates the adverse demand and financial channels.';
+  if(e.phaseIndex>75 && e.labourShare<35) text='The scenario reaches a post-historical regime: output, labour income and organisational form no longer move within normal macroeconomic elasticities.';
+  return {text,peak,gdpUplift};
+}
+
+const controlsMeta={
+  horizon:v=>String(v),baseGrowth:v=>pct(v),adoptionSpeed:v=>fmt(v,2),transitionCompression:v=>fmt(v,1)+'×',phaseThreshold:v=>pct(v,0),phaseStrength:v=>pct(v,0),adoptionCeiling:v=>pct(v,0),autonomyTarget:v=>pct(v,0),capabilityJump:v=>pct(v,0),
+  maxProductivity:v=>'+'+pct(v),taskExposure:v=>pct(v,0),substitution:v=>pct(v,0),reallocation:v=>pct(v,0),rentCapture:v=>pct(v,0),redistribution:v=>pct(v,0),
+  contractEfficiency:v=>pct(v,0),legalRecognition:v=>pct(v,0),financialAgentTarget:v=>pct(v,0),depositSwitching:v=>pct(v,0),marketAutomation:v=>pct(v,0),
+  modelConcentration:v=>pct(v,0),logicalCoordination:v=>pct(v,0),shockSize:v=>pct(v,0),regulatorySpeed:v=>pct(v,0),liquidityResponse:v=>pct(v,0),capitalResponse:v=>pct(v,0)
+};
+
+function syncControls(){
+  ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.value=state[id];const out=document.getElementById(id+'Out');if(out)out.textContent=(controlsMeta[id]||String)(state[id]);});
+  document.querySelectorAll('.preset').forEach(b=>b.classList.toggle('active',b.dataset.key===currentPreset));
+  document.getElementById('scenarioName').textContent=currentPreset==='custom'?'Custom scenario':presets[currentPreset].name;
+}
+
+function buildPresetButtons(){
+  const box=document.getElementById('presetButtons');box.innerHTML='';
+  Object.entries(presets).forEach(([key,p])=>{const b=document.createElement('button');b.className='preset';b.dataset.key=key;b.textContent=p.name;b.title=p.desc;b.onclick=()=>{currentPreset=key;state={...p.params};uncertainty=null;syncControls();render();};box.appendChild(b);});
+}
+
+function setupControls(){
+  ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener('input',()=>{state[id]=el.type==='number'?Number(el.value):Number(el.value);currentPreset='custom';uncertainty=null;syncControls();render();});});
+}
+
+function kpiClass(value,kind){if(kind==='risk')return value<35?'good':value>60?'bad':'warn';if(kind==='cet1')return value>=12?'good':value<9?'bad':'warn';if(kind==='lcr')return value>=120?'good':value<100?'bad':'warn';return '';}
+function renderKPIs(rows){
+  const e=rows.at(-1),d=diagnose(rows),peak=rows.reduce((a,b)=>b.depositFlight>a.depositFlight?b:a,rows[0]);
+  const lowEmp=rows.reduce((a,b)=>b.employment<a.employment?b:a,rows[0]);
+  const lowLab=rows.reduce((a,b)=>b.labourShare<a.labourShare?b:a,rows[0]);
+  const items=[
+    ['GDP vs non-AI trend',(d.gdpUplift>=0?'+':'')+pct(d.gdpUplift),'End-horizon cumulative difference',d.gdpUplift>=0?'good':'bad'],
+    ['Peak productivity uplift','+'+pct(Math.max(...rows.map(r=>r.extraProd))),`Phase index ${fmt(e.phaseIndex,0)}/100`,Math.max(...rows.map(r=>r.extraProd))>10?'warn':'good'],
+    ['Minimum employment',pct(lowEmp.employment),`${lowEmp.year}; ${(lowEmp.employment-observed.employmentRate.value).toFixed(1)} pp from start`,lowEmp.employment>=72?'good':lowEmp.employment<68?'bad':'warn'],
+    ['Minimum labour share',pct(lowLab.labourShare),`${lowLab.year}; ${(lowLab.labourShare-observed.labourShare.value).toFixed(1)} pp from start`,lowLab.labourShare>=55?'good':lowLab.labourShare<48?'bad':'warn'],
+    ['Peak deposit flight',pct(peak.depositFlight),`${peak.year}, modelled 30-day stress`,peak.depositFlight<6?'good':peak.depositFlight>15?'bad':'warn'],
+    ['Major-bank CET1',pct(e.cet1),`${(e.cet1-observed.cet1.value).toFixed(1)} pp from start`,kpiClass(e.cet1,'cet1')],
+    ['Major-bank LCR',pct(e.lcr,0),`${(e.lcr-observed.lcr.value).toFixed(0)} pp from start`,kpiClass(e.lcr,'lcr')],
+    ['Systemic risk',fmt(e.systemic,0)+'/100',`Peak ${fmt(d.peak.systemic,0)} in ${d.peak.year}`,kpiClass(e.systemic,'risk')]
+  ];
+  document.getElementById('kpis').innerHTML=items.map(x=>`<div class="kpi"><div class="name">${x[0]}</div><div class="big ${x[3]}">${x[1]}</div><div class="delta">${x[2]}</div></div>`).join('');
+}
+
+function sizeCanvas(c){const dpr=window.devicePixelRatio||1;const rect=c.getBoundingClientRect();c.width=Math.max(400,rect.width*dpr);c.height=280*dpr;const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {ctx,w:rect.width,h:280};}
+function lineChart(canvasId,rows,series,opts={}){
+  const c=document.getElementById(canvasId);const {ctx,w,h}=sizeCanvas(c);ctx.clearRect(0,0,w,h);
+  const pad={l:45,r:18,t:18,b:30};const xs=rows.map(r=>r.year);let vals=[];series.forEach(s=>rows.forEach(r=>vals.push(s.get(r))));
+  if(opts.band){opts.band.low.forEach(v=>vals.push(v));opts.band.high.forEach(v=>vals.push(v));}
+  let ymin=opts.ymin??Math.min(...vals), ymax=opts.ymax??Math.max(...vals);if(ymin===ymax){ymin-=1;ymax+=1;}const margin=(ymax-ymin)*.08;ymin-=margin;ymax+=margin;
+  const X=i=>pad.l+i*(w-pad.l-pad.r)/(rows.length-1||1);const Y=v=>pad.t+(ymax-v)*(h-pad.t-pad.b)/(ymax-ymin);
+  ctx.strokeStyle='#213a54';ctx.lineWidth=1;ctx.fillStyle='#8da3b9';ctx.font='11px system-ui';ctx.textAlign='right';ctx.textBaseline='middle';
+  for(let j=0;j<5;j++){const v=ymin+(ymax-ymin)*j/4;const y=Y(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(fmt(v,opts.decimals??1),pad.l-7,y);}
+  ctx.textAlign='center';ctx.textBaseline='top';const step=Math.max(1,Math.ceil(rows.length/7));for(let i=0;i<rows.length;i+=step){ctx.fillText(xs[i],X(i),h-pad.b+7)}
+  if(opts.band){ctx.beginPath();opts.band.high.forEach((v,i)=>{if(i===0)ctx.moveTo(X(i),Y(v));else ctx.lineTo(X(i),Y(v));});for(let i=opts.band.low.length-1;i>=0;i--)ctx.lineTo(X(i),Y(opts.band.low[i]));ctx.closePath();ctx.fillStyle='rgba(69,111,157,.20)';ctx.fill();}
+  series.forEach(s=>{ctx.beginPath();rows.forEach((r,i)=>{const y=Y(s.get(r));if(i===0)ctx.moveTo(X(i),y);else ctx.lineTo(X(i),y);});ctx.strokeStyle=s.color;ctx.lineWidth=s.width||2;ctx.setLineDash(s.dash||[]);ctx.stroke();ctx.setLineDash([]);});
+  c._chart={rows,series,X,Y,pad};
+}
+function barChart(canvasId,data,colorFn){
+  const c=document.getElementById(canvasId);const {ctx,w,h}=sizeCanvas(c);ctx.clearRect(0,0,w,h);const pad={l:45,r:15,t:18,b:60};const max=Math.max(...data.map(d=>d.value))*1.12;const bw=(w-pad.l-pad.r)/data.length*.62;
+  ctx.strokeStyle='#213a54';ctx.fillStyle='#8da3b9';ctx.font='11px system-ui';ctx.textAlign='right';for(let j=0;j<5;j++){const v=max*j/4;const y=h-pad.b-(h-pad.t-pad.b)*v/max;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(fmt(v,0),pad.l-7,y+3)}
+  data.forEach((d,i)=>{const x=pad.l+(i+.5)*(w-pad.l-pad.r)/data.length;const bh=(h-pad.t-pad.b)*d.value/max;ctx.fillStyle=colorFn(d);ctx.fillRect(x-bw/2,h-pad.b-bh,bw,bh);ctx.save();ctx.translate(x,h-pad.b+8);ctx.rotate(-.45);ctx.textAlign='right';ctx.fillStyle='#a9bbcc';ctx.fillText(d.name,0,0);ctx.restore();});
+}
+
+function attachCanvasTooltips(){
+  ['gdpChart','labourChart','bankChart','riskChart'].forEach(id=>{const c=document.getElementById(id);c.onmousemove=e=>{const ch=c._chart;if(!ch)return;const rect=c.getBoundingClientRect();const mx=e.clientX-rect.left;let idx=Math.round((mx-ch.pad.l)/(rect.width-ch.pad.l-ch.pad.r)*(ch.rows.length-1));idx=clamp(idx,0,ch.rows.length-1);const r=ch.rows[idx];const html=`<strong>${r.year}</strong><br>`+ch.series.map(s=>`${s.label}: ${fmt(s.get(r),s.decimals??1)}${s.suffix||''}`).join('<br>');const t=document.getElementById('tooltip');t.innerHTML=html;t.style.display='block';t.style.left=(e.clientX+12)+'px';t.style.top=(e.clientY+12)+'px';};c.onmouseleave=()=>document.getElementById('tooltip').style.display='none';});
+}
+
+function renderCharts(rows){
+  const band=uncertainty?{low:uncertainty.gdpLow,high:uncertainty.gdpHigh}:null;
+  lineChart('gdpChart',rows,[{label:'Scenario GDP index',get:r=>r.gdp,color:'#66d9c8',width:2.6},{label:'Non-AI baseline',get:r=>r.baseGDP,color:'#7a91aa',dash:[5,5]}],{band,decimals:0});
+  lineChart('labourChart',rows,[{label:'Employment rate',get:r=>r.employment,color:'#78a9ff',suffix:'%'},{label:'Labour share',get:r=>r.labourShare,color:'#ffce6a',suffix:'%'},{label:'Displaced stock',get:r=>r.displaced,color:'#ff7c8e',suffix:'%'}],{ymin:0,ymax:100});
+  lineChart('bankChart',rows,[{label:'CET1',get:r=>r.cet1,color:'#74e0a7',suffix:'%'},{label:'LCR / 10',get:r=>r.lcr/10,color:'#78a9ff',suffix:''},{label:'Credit losses',get:r=>r.creditLoss,color:'#ff7c8e',suffix:'%'}],{ymin:0});
+  lineChart('riskChart',rows,[{label:'Business AI adoption',get:r=>r.adoption,color:'#66d9c8',suffix:'%'},{label:'Agent-managed money',get:r=>r.agentMoney,color:'#78a9ff',suffix:'%'},{label:'Network production',get:r=>r.network,color:'#c894ef',suffix:'%'},{label:'Phase index',get:r=>r.phaseIndex,color:'#ffffff',dash:[3,4],suffix:'/100'},{label:'Systemic risk',get:r=>r.systemic,color:'#ff7c8e',suffix:'/100'}],{ymin:0,ymax:100});
+}
+
+function renderDiagnosis(rows){
+  const d=diagnose(rows),e=rows.at(-1),peakFlight=rows.reduce((a,b)=>b.depositFlight>a.depositFlight?b:a,rows[0]);
+  document.getElementById('diagnosisText').textContent=d.text;
+  const items=[['End phase',e.phase],['Phase index',fmt(e.phaseIndex,0)+'/100'],['Peak-risk year',String(d.peak.year)],['Network production',pct(e.network)],['Agent-managed money',pct(e.agentMoney)],['Household debt / income',pct(e.hhDTI,0)],['Peak 30-day flight',pct(peakFlight.depositFlight)]];
+  document.getElementById('diagnosisGrid').innerHTML=items.map(x=>`<div class="mini"><div class="label">${x[0]}</div><div class="num">${x[1]}</div></div>`).join('');
+  const checks=[
+    ['Employment below 70%',Math.min(...rows.map(r=>r.employment))<70,Math.min(...rows.map(r=>r.employment)),70,'%'],
+    ['Labour share below 50%',Math.min(...rows.map(r=>r.labourShare))<50,Math.min(...rows.map(r=>r.labourShare)),50,'%'],
+    ['Deposit flight above 10%',Math.max(...rows.map(r=>r.depositFlight))>10,Math.max(...rows.map(r=>r.depositFlight)),10,'%'],
+    ['CET1 below 10%',Math.min(...rows.map(r=>r.cet1))<10,Math.min(...rows.map(r=>r.cet1)),10,'%'],
+    ['LCR below 100%',Math.min(...rows.map(r=>r.lcr))<100,Math.min(...rows.map(r=>r.lcr)),100,'%'],
+    ['Systemic risk above 60',Math.max(...rows.map(r=>r.systemic))>60,Math.max(...rows.map(r=>r.systemic)),60,''],
+    ['Structural phase above 75',Math.max(...rows.map(r=>r.phaseIndex))>75,Math.max(...rows.map(r=>r.phaseIndex)),75,'']
+  ];
+  document.getElementById('tipping').innerHTML=checks.map(c=>`<div style="margin:10px 0"><div class="label-row"><span>${c[0]}</span><strong class="${c[1]?'bad':'good'}">${c[1]?'Crossed':'Not crossed'}</strong></div><div class="riskbar"><div style="width:${clamp(c[2]/(c[3]||1)*65,3,100)}%"></div></div></div>`).join('');
+}
+
+function renderPath(rows){
+  const cols=[['Year','year',0],['GDP index','gdp',1],['GDP growth','gdpGrowth',1],['Productivity uplift','extraProd',1],['Phase index','phaseIndex',0],['Employment','employment',1],['Labour share','labourShare',1],['Displaced stock','displaced',1],['AI adoption','adoption',1],['Autonomy','autonomy',1],['Agent money','agentMoney',1],['Network production','network',1],['Deposit flight','depositFlight',1],['Credit losses','creditLoss',2],['CET1','cet1',1],['LCR','lcr',0],['Systemic risk','systemic',0]];
+  document.getElementById('pathTable').innerHTML='<thead><tr>'+cols.map(c=>`<th>${c[0]}</th>`).join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+cols.map(c=>`<td>${c[1]==='year'?r[c[1]]:fmt(r[c[1]],c[2])}</td>`).join('')+'</tr>').join('')+'</tbody>';
+}
+
+function renderSources(){
+  const box=document.getElementById('sourceGrid');box.innerHTML='';
+  Object.entries(observed).forEach(([key,d])=>{
+    const type=d.type.startsWith('Observed')?'obs':d.type.includes('assumption')?'assump':'experimental';
+    const card=document.createElement('div');card.className='source';
+    card.innerHTML=`<div class="metric">${key.replace(/([A-Z])/g,' $1').replace(/^./,x=>x.toUpperCase())}<span class="tag ${type}">${d.type}</span></div><div class="datum">${fmt(d.value,d.value%1?1:0)} ${d.unit}</div><div class="meta">${d.date}<br>${d.source}</div><p class="small">${d.note}</p>${d.url?`<a href="${d.url}" target="_blank" rel="noopener">Open public source ↗</a>`:''}`;
+    box.appendChild(card);
+  });
+}
+
+function comparePresets(){
+  return Object.entries(presets).map(([key,p])=>{const rows=simulate({...p.params,horizon:state.horizon});const e=rows.at(-1),d=diagnose(rows,p.params),peak=Math.max(...rows.map(r=>r.depositFlight));const minEmp=Math.min(...rows.map(r=>r.employment)), minCET1=Math.min(...rows.map(r=>r.cet1)), minLCR=Math.min(...rows.map(r=>r.lcr)), peakRisk=Math.max(...rows.map(r=>r.systemic));return{key,name:p.name,desc:p.desc,gdp:e.gdp,uplift:d.gdpUplift,employment:minEmp,labour:e.labourShare,flight:peak,cet1:minCET1,lcr:minLCR,risk:peakRisk,network:e.network,phase:e.phaseIndex,productivity:Math.max(...rows.map(r=>r.extraProd))};});
+}
+function renderCompare(){
+  const data=comparePresets();const cols=['Scenario','GDP uplift','Peak productivity','Min employment','End labour share','Phase index','Peak flight','Min CET1','Min LCR','Peak risk','End network production'];
+  document.getElementById('compareTable').innerHTML='<thead><tr>'+cols.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>'+data.map(d=>`<tr data-key="${d.key}" style="cursor:pointer"><td><strong>${d.name}</strong><br><span class="small">${d.desc}</span></td><td>${d.uplift>=0?'+':''}${pct(d.uplift)}</td><td>+${pct(d.productivity)}</td><td>${pct(d.employment)}</td><td>${pct(d.labour)}</td><td>${fmt(d.phase,0)}/100</td><td>${pct(d.flight)}</td><td>${pct(d.cet1)}</td><td>${pct(d.lcr,0)}</td><td class="${d.risk>60?'risk-high':d.risk<35?'risk-low':''}">${fmt(d.risk,0)}</td><td>${pct(d.network)}</td></tr>`).join('')+'</tbody>';
+  document.querySelectorAll('#compareTable tbody tr').forEach(tr=>tr.onclick=()=>{const key=tr.dataset.key;currentPreset=key;state={...presets[key].params,horizon:state.horizon};syncControls();document.querySelector('[data-tab="dashboard"]').click();render();});
+  barChart('compareGDP',data.map(d=>({name:d.name,value:d.gdp})),()=> '#66d9c8');
+  barChart('compareRisk',data.map(d=>({name:d.name,value:d.risk})),d=>d.value>60?'#ff7c8e':d.value>35?'#ffce6a':'#74e0a7');
+}
+
+function rng(seed=123456789){let x=seed|0;return()=>{x^=x<<13;x^=x>>>17;x^=x<<5;return((x>>>0)/4294967296);};}
+function normal(rand){let u=0,v=0;while(!u)u=rand();while(!v)v=rand();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function quantile(arr,q){const a=[...arr].sort((x,y)=>x-y);const p=(a.length-1)*q;const b=Math.floor(p),r=p-b;return a[b]+((a[b+1]??a[b])-a[b])*r;}
+function runUncertainty(){
+  const rand=rng(20260617),draws=[];for(let i=0;i<300;i++){
+    const p={...state};
+    const vary=(k,sd,min,max)=>p[k]=clamp(p[k]*(1+normal(rand)*sd),min,max);
+    vary('maxProductivity',.24,0,35);vary('transitionCompression',.14,.4,4);vary('phaseThreshold',.10,25,85);vary('phaseStrength',.12,0,100);vary('substitution',.17,0,100);vary('reallocation',.16,0,100);vary('rentCapture',.12,0,100);vary('depositSwitching',.14,0,100);vary('modelConcentration',.10,0,100);vary('shockSize',.28,0,60);vary('regulatorySpeed',.10,0,100);
+    draws.push(simulate(p));
+  }
+  const len=draws[0].length;const gdpLow=[],gdpHigh=[];for(let t=0;t<len;t++){const a=draws.map(d=>d[t].gdp);gdpLow.push(quantile(a,.1));gdpHigh.push(quantile(a,.9));}
+  const finals=draws.map(d=>d.at(-1));uncertainty={gdpLow,gdpHigh,stats:{gdp:[quantile(finals.map(x=>x.gdp),.1),quantile(finals.map(x=>x.gdp),.5),quantile(finals.map(x=>x.gdp),.9)],employment:[quantile(finals.map(x=>x.employment),.1),quantile(finals.map(x=>x.employment),.5),quantile(finals.map(x=>x.employment),.9)],cet1:[quantile(finals.map(x=>x.cet1),.1),quantile(finals.map(x=>x.cet1),.5),quantile(finals.map(x=>x.cet1),.9)],risk:[quantile(finals.map(x=>x.systemic),.1),quantile(finals.map(x=>x.systemic),.5),quantile(finals.map(x=>x.systemic),.9)]}};
+  render();document.getElementById('uncertaintyStatus').textContent='Completed: 300 deterministic Monte Carlo draws.';
+}
+function renderUncertainty(){
+  const box=document.getElementById('uncertaintyBox');if(!uncertainty){box.textContent='Run the uncertainty analysis to populate this panel.';return;}
+  const s=uncertainty.stats;box.innerHTML=`<table><thead><tr><th>Output</th><th>P10</th><th>P50</th><th>P90</th></tr></thead><tbody>
+  <tr><td>GDP index</td>${s.gdp.map(x=>`<td>${fmt(x,1)}</td>`).join('')}</tr>
+  <tr><td>Employment</td>${s.employment.map(x=>`<td>${pct(x)}</td>`).join('')}</tr>
+  <tr><td>CET1</td>${s.cet1.map(x=>`<td>${pct(x)}</td>`).join('')}</tr>
+  <tr><td>Systemic risk</td>${s.risk.map(x=>`<td>${fmt(x,0)}</td>`).join('')}</tr></tbody></table>`;
+}
+
+function render(){
+  const rows=simulate(state);renderKPIs(rows);renderCharts(rows);renderDiagnosis(rows);renderPath(rows);renderUncertainty();
+  if(document.getElementById('compare').classList.contains('active'))renderCompare();
+}
+
+function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function exportScenario(){download('ai-financial-transition-scenario.json',JSON.stringify({generated:new Date().toISOString(),scenario:currentPreset,parameters:state,startingConditions:observed},null,2),'application/json');}
+function exportCSV(){const rows=simulate(state);const keys=Object.keys(rows[0]);const csv=[keys.join(','),...rows.map(r=>keys.map(k=>typeof r[k]==='string'?`"${r[k].replaceAll('"','""')}"`:r[k]).join(','))].join('\n');download('ai-financial-transition-paths.csv',csv,'text/csv');}
+
+function initTabs(){document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');if(b.dataset.tab==='compare')requestAnimationFrame(renderCompare);if(b.dataset.tab==='dashboard')requestAnimationFrame(render);});}
+
+loadState();buildPresetButtons();setupControls();syncControls();renderSources();initTabs();attachCanvasTooltips();render();
+window.addEventListener('resize',()=>{render();if(document.getElementById('compare').classList.contains('active'))renderCompare();});
+document.getElementById('saveBtn').onclick=saveState;
+document.getElementById('exportBtn').onclick=exportScenario;
+document.getElementById('csvBtn').onclick=exportCSV;
+document.getElementById('uncertaintyBtn').onclick=runUncertainty;
+document.getElementById('resetBtn').onclick=()=>{localStorage.removeItem(STORAGE_KEY);state={...defaults};currentPreset='managed';uncertainty=null;syncControls();render();};
+</script>
+</body>
+</html>
